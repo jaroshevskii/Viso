@@ -18,7 +18,7 @@ final class LaunchViewModel: ObservableObject {
         status = .loading
         
         Task {
-            try? await Task.sleep(for: .seconds((0..<3).randomElement()!))
+            try? await Task.sleep(for: .seconds((2..<3).randomElement()!))
             status = .finished
         }
     }

@@ -9,15 +9,19 @@ import UIKit
 
 final class LaunchViewController: UIViewController {
     var onFinish: (() -> Void)?
-
+    
     private let launchViewModel: LaunchViewModel
     
     private var observationTasks = Set<Task<Void, Never>>()
+    
+    private var slideshowAnimator: ImageSlideshowAnimator?
 
     private lazy var titleLabel = makeTitleLabel()
     
     private lazy var statusLabel = makeStatusLabel()
-
+    
+    private lazy var animationImageView = makeAnimationImageView()
+    
     init(launchViewModel: LaunchViewModel) {
         self.launchViewModel = launchViewModel
         
@@ -32,6 +36,7 @@ final class LaunchViewController: UIViewController {
         super.viewDidLoad()
         
         configureUI()
+        configureSlideshowAnimator()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -43,13 +48,15 @@ final class LaunchViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        launchViewModel.launch()
+        animationImageView.startAnimating()
+        slideshowAnimator?.startAnimation()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         stopObserving()
+        slideshowAnimator?.stopAnimation()
     }
 }
 
@@ -88,12 +95,18 @@ private extension LaunchViewController {
     }
 
     func configureHierarchy() {
+        view.addSubview(animationImageView)
         view.addSubview(titleLabel)
         view.addSubview(statusLabel)
     }
 
     func configureLayout() {
         NSLayoutConstraint.activate([
+            animationImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            animationImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            animationImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            animationImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
@@ -101,10 +114,30 @@ private extension LaunchViewController {
             statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
         ])
     }
+    
+    func configureSlideshowAnimator() {
+        var configuration = ImageSlideshowAnimator.Configuration()
+        configuration.images = [
+            UIImage(named: "cat")!,
+            UIImage(named: "cat2")!,
+            UIImage(named: "cat3")!,
+            UIImage(named: "cat4")!,
+            UIImage(named: "cat5")!
+        ]
+        configuration.interval = 0.5
+        slideshowAnimator = ImageSlideshowAnimator(imageView: animationImageView, configuration: configuration)
+    }
 }
 
 // MARK: - Builders
 private extension LaunchViewController {
+    func makeAnimationImageView() -> UIImageView {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }
+    
     func makeTitleLabel() -> UILabel {
         let label = UILabel()
         label.text = "Launch"
