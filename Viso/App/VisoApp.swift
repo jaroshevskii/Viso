@@ -12,15 +12,11 @@ import ComposableArchitecture
 struct VisoApp: App {
     var body: some Scene {
         WindowGroup {
-<<<<<<< HEAD:Viso/VisoApp.swift
-               MainView()
-=======
             MainView(
                 store: Store(initialState: MainFeature.State()) {
                     MainFeature()
                 }
             )
->>>>>>> tca-refactor:Viso/App/VisoApp.swift
         }
     }
 }

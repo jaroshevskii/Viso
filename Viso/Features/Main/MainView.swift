@@ -68,7 +68,7 @@ struct MainView: View {
 //                    text: viewStore.binding(\.$searchTerm),
 //                    prompt: "Search images"
 //                )
-                .navigationTitle("ClassifyingImages")
+                .navigationTitle("Viso")
             }
         }
     }
