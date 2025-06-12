@@ -11,7 +11,9 @@ import PhotosUI
 
 struct MainView: View {
     let store: StoreOf<MainFeature>
-
+    @State private var exportURL: URL? = nil
+    @State private var isShowingShareSheet = false
+    
     var body: some View {
         WithViewStore(self.store, observe: \.self) { viewStore in
             NavigationStack {
@@ -64,20 +66,73 @@ struct MainView: View {
                         }
                     }
                 }
-//                .searchable(
-//                    text: viewStore.binding(\.$searchTerm),
-//                    prompt: "Search images"
-//                )
+                //                .searchable(
+                //                    text: viewStore.binding(\.$searchTerm),
+                //                    prompt: "Search images"
+                //                )
                 .navigationTitle("Viso")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Export All") {
+                            exportCSV(images: viewStore.images)
+                        }
+                    }
+                }
+                // Share sheet presentation for exporting CSV file
+                .sheet(isPresented: $isShowingShareSheet, onDismiss: {
+                    if let url = exportURL {
+                        try? FileManager.default.removeItem(at: url)
+                        exportURL = nil
+                    }
+                }) {
+                    if let exportURL = exportURL {
+                        ShareSheet(activityItems: [exportURL])
+                    }
+                }
             }
         }
     }
-
+    
+    func exportCSV(images: [ImageFile]) {
+        // CSV header
+        var csvString = "ID,Observation,Confidence\n"
+        
+        for image in images {
+            for (key, confidence) in image.observations.sorted(by: { $0.value > $1.value }) {
+                // Escape commas or quotes if needed here (simple approach)
+                let id = image.id
+                csvString += "\(id),\(key),\(confidence)\n"
+            }
+        }
+        
+        // Save CSV to a temporary file
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileURL = tempDir.appendingPathComponent("ImageObservations.csv")
+        
+        do {
+            try csvString.write(to: fileURL, atomically: true, encoding: .utf8)
+            exportURL = fileURL
+            isShowingShareSheet = true
+        } catch {
+            print("Error writing CSV: \(error)")
+        }
+    }
+    
     func searchResults(_ viewStore: ViewStore<MainFeature.State, MainFeature.Action>) -> [ImageFile] {
         let term = viewStore.searchTerm
         return term.isEmpty
-            ? viewStore.images
-            : viewStore.images.filter { $0.observations.keys.contains(term) }
+        ? viewStore.images
+        : viewStore.images.filter { $0.observations.keys.contains(term) }
     }
 }
 
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
