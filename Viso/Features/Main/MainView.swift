@@ -89,6 +89,19 @@ struct MainView: View {
                             exportCSV(images: viewStore.images)
                         }
                     }
+                    
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        PhotosPicker(
+                            selection: viewStore.binding(
+                                get: \.selectedItems,
+                                send: MainFeature.Action.didPickItems
+                            ),
+                            matching: .images
+                        ) {
+                            Image(systemName: "plus")
+                        }
+                        .accessibilityLabel("Pick More Images")
+                    }
                 }
                 .sheet(isPresented: $isShowingShareSheet, onDismiss: {
                     if let url = exportURL {
