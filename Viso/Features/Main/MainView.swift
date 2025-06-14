@@ -11,8 +11,14 @@ import PhotosUI
 
 struct MainView: View {
     let store: StoreOf<MainFeature>
+    
     @State private var exportURL: URL? = nil
     @State private var isShowingShareSheet = false
+
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
     
     var body: some View {
         WithViewStore(self.store, observe: \.self) { viewStore in
@@ -32,44 +38,50 @@ struct MainView: View {
                         if viewStore.isLoading {
                             ProgressView()
                         } else {
-                            List {
-                                ForEach(searchResults(viewStore), id: \.url) { image in
-                                    NavigationLink(destination: ResultsView(image: image)) {
-                                        HStack {
-                                            AsyncImage(url: image.url) { phase in
-                                                switch phase {
-                                                case .empty:
-                                                    ProgressView()
-                                                case .success(let image):
-                                                    image
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fit)
-                                                        .frame(width: 44, height: 44)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                case .failure:
-                                                    Image(systemName: "photo")
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fit)
-                                                        .frame(width: 44, height: 44)
-                                                        .foregroundColor(.gray)
-                                                @unknown default:
-                                                    EmptyView()
+                            ScrollView {
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(searchResults(viewStore), id: \.url) { image in
+                                        NavigationLink(destination: ResultsView(image: image)) {
+                                            VStack {
+                                                AsyncImage(url: image.url) { phase in
+                                                    switch phase {
+                                                    case .empty:
+                                                        ProgressView()
+                                                            .frame(height: 120)
+                                                    case .success(let image):
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .frame(height: 120)
+                                                            .clipped()
+                                                            .cornerRadius(12)
+                                                    case .failure:
+                                                        Image(systemName: "photo")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(height: 120)
+                                                            .foregroundColor(.gray)
+                                                    @unknown default:
+                                                        EmptyView()
+                                                    }
                                                 }
+                                                Text(image.name)
+                                                    .font(.caption)
+                                                    .lineLimit(1)
+                                                    .padding(.top, 4)
                                             }
-                                            Text(image.name)
-                                                .lineLimit(1)
-                                                .padding(.leading, 8)
+                                            .padding()
+                                            .background(Color(.systemBackground))
+                                            .cornerRadius(12)
+                                            .shadow(radius: 2)
                                         }
                                     }
                                 }
+                                .padding()
                             }
                         }
                     }
                 }
-                //                .searchable(
-                //                    text: viewStore.binding(\.$searchTerm),
-                //                    prompt: "Search images"
-                //                )
                 .navigationTitle("Viso")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -78,7 +90,6 @@ struct MainView: View {
                         }
                     }
                 }
-                // Share sheet presentation for exporting CSV file
                 .sheet(isPresented: $isShowingShareSheet, onDismiss: {
                     if let url = exportURL {
                         try? FileManager.default.removeItem(at: url)
@@ -92,7 +103,7 @@ struct MainView: View {
             }
         }
     }
-    
+
     func exportCSV(images: [ImageFile]) {
         // CSV header
         var csvString = "ID,Observation,Confidence\n"
