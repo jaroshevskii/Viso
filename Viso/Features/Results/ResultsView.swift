@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import FoundationModels
 
 struct ResultsView: View {
     let image: ImageFile
+
+    @State private var attributedResponse: AttributedString?
 
     private let columns = [
         GridItem(spacing: 8)
@@ -17,6 +20,16 @@ struct ResultsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                Text(attributedResponse ?? AttributedString("Analyzing observations..."))
+                    .padding(12)
+                    .background(Color.blue.opacity(0.2))
+                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.body)
+                    .task {
+                        await analyzeObservations()
+                    }
+
                 if image.observations.isEmpty {
                     Text("No observations found.")
                         .padding(8)
@@ -41,6 +54,45 @@ struct ResultsView: View {
                 .ignoresSafeArea()
         )
         .navigationTitle("Results")
+    }
+
+    private func analyzeObservations() async {
+        guard !image.observations.isEmpty else {
+            await MainActor.run {
+                attributedResponse = AttributedString("No observations to analyze.")
+            }
+            return
+        }
+
+        let observationsDescription = image.observations
+            .sorted(by: { $0.value > $1.value })
+            .map { key, value in
+                "\(key.replacingOccurrences(of: "_", with: " ").capitalizedFirstLetterOnly()): \(String(format: "%.2f", value))"
+            }
+            .joined(separator: ", ")
+
+        let prompt = """
+        Analyze the following image observations and provide a detailed, complex interpretation about what these observations might indicate about the image content and context:
+
+        \(observationsDescription)
+        """
+
+        do {
+            let session = LanguageModelSession()
+
+            for try await partialResponse in session.streamResponse(to: prompt) {
+
+                await MainActor.run {
+                    if let attrStr = try? AttributedString(markdown: partialResponse, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+                        attributedResponse = attrStr
+                    }
+                }
+            }
+        } catch {
+            await MainActor.run {
+                attributedResponse = AttributedString("Failed to analyze observations: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
