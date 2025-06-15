@@ -42,38 +42,48 @@ struct MainView: View {
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(searchResults(viewStore), id: \.url) { image in
                                         NavigationLink(destination: ResultsView(image: image)) {
-                                            VStack {
+                                            ZStack(alignment: .bottom) {
                                                 AsyncImage(url: image.url) { phase in
                                                     switch phase {
                                                     case .empty:
                                                         ProgressView()
-                                                            .frame(height: 120)
-                                                    case .success(let image):
-                                                        image
+                                                            .frame(maxWidth: .infinity, maxHeight: 200)
+                                                    case .success(let loadedImage):
+                                                        loadedImage
                                                             .resizable()
                                                             .scaledToFill()
-                                                            .frame(height: 120)
+                                                            .frame(maxWidth: .infinity, maxHeight: 200)
                                                             .clipped()
-                                                            .cornerRadius(12)
                                                     case .failure:
                                                         Image(systemName: "photo")
                                                             .resizable()
                                                             .scaledToFit()
-                                                            .frame(height: 120)
+                                                            .frame(maxWidth: .infinity, maxHeight: 200)
                                                             .foregroundColor(.gray)
                                                     @unknown default:
                                                         EmptyView()
                                                     }
                                                 }
-                                                Text(image.name)
-                                                    .font(.caption)
-                                                    .lineLimit(1)
-                                                    .padding(.top, 4)
+                                                
+                                                // Text overlay with blur backgroundw
+                                                ZStack {
+                                                    Rectangle()
+                                                        .fill(.ultraThinMaterial) // adds blur
+                                                        .frame(height: 40)
+                                                        .blur(radius: 10)
+                                                    
+                                                    Text(image.name)
+                                                        .font(.caption.bold())
+                                                        .foregroundColor(.primary)
+                                                        .lineLimit(1)
+                                                        .padding(.horizontal)
+                                                }
                                             }
-                                            .padding()
-                                            .background(Color(.systemBackground))
+                                            .frame(height: 200)
                                             .cornerRadius(12)
+                                            .clipped()
                                             .shadow(radius: 2)
+//                                            .padding()
                                         }
                                     }
                                 }
