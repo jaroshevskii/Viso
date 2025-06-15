@@ -118,11 +118,11 @@ struct BlurredImageBackground: View {
                             overlayOpacity = 0.6
                         }
                 default:
-                    Color.black
+                    Color(uiColor: .systemBackground)
                 }
             }
 
-            Color.black
+            Color(uiColor: .systemBackground)
                 .opacity(overlayOpacity)
                 .animation(.easeOut(duration: 1), value: overlayOpacity)
         }
