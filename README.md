@@ -1,6 +1,6 @@
 # Viso
 
-**Viso** is a mobile information-measurement system (iOS app) for recognizing objects in images and generating human-readable explanations. It uses Apple’s **Vision** framework for on-device object detection and **FoundationModels** (Core ML) to generate GPT-style text descriptions — all running fully offline.
+**Viso** is a mobile information-measurement system (iOS app) for recognizing objects in images and generating human-readable explanations. It uses Apple’s **Vision** framework for on-device object detection and **FoundationModels** to generate GPT-style text descriptions — all running fully offline.
 
 ## 🧠 Features
 
