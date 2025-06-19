@@ -74,8 +74,3 @@ Given an image of a salad on a wooden table:
 ## 📃 License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE.md) file for details.
-
-## 👨‍💻 Author
-
-Developed as part of a bachelor qualification project by
-**Sasha Jaroshevskii** – [github.com/jaroshevskii](https://github.com/jaroshevskii)
